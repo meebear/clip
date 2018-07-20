@@ -1,19 +1,5 @@
-use std::any::Any;
-
-pub enum ArgType {
-    Text(Option<String>),
-    Int64(i64),
-    Uint64(u64),
-    Bool(bool),
-    Count(i64),
-    Custom(Box<dyn Any>),
-}
-
-use self::ArgType::{Text, Int64, Uint64, Bool, Count, Custom};
-
-pub struct ArgOpt {
-    pub var: ArgType,
-}
+use super::ArgType;
+use super::ArgType::{Text, Int64, Uint64, Bool, Count, Custom};
 
 impl ArgType {
     /*
@@ -52,11 +38,11 @@ impl ArgType {
 }
 
 #[macro_export]
-macro_rules! get_value_ {
+macro_rules! clip_value_ {
     ($at:ident, $dft:expr, $val:expr) => { {
-        let mut v = $at($dft);
+        let mut v = ArgType::$at($dft);
         v.get_value($val);
-        if let $at(c) = v {
+        if let ArgType::$at(c) = v {
             Some(c)
         } else {
             None
@@ -65,17 +51,17 @@ macro_rules! get_value_ {
 }
 
 #[macro_export]
-macro_rules! get_value {
+macro_rules! clip_value {
     (Text, $val:expr) => {
-        get_value_!(Text, None, $val).unwrap().unwrap_or_else(|| "".to_string())
+        clip_value_!(Text, None, $val).unwrap().unwrap_or_else(|| "".to_string())
     };
     (Bool, $val:expr) => {
-        get_value_!(Bool, false, $val).unwrap()
+        clip_value_!(Bool, false, $val).unwrap()
     };
     (Custom, $val:expr) => {
         panic!("TODO");
     };
     ($at:ident, $val:expr) => {
-        get_value_!($at, 0, $val).unwrap()
+        clip_value_!($at, 0, $val).unwrap()
     };
 }
