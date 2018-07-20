@@ -19,6 +19,18 @@ fn test_argtype_builtin() {
 }
 
 #[test]
+fn test_argtype_array_builtin() {
+    let var = ArgType::Texts(Some(vec!["helo".to_string(), "wold".to_string()]));
+    assert_eq!(clip_value!(&var, Texts), vec!["helo", "wold"]);
+
+    let var = ArgType::Ints(Some(vec![1, 2, 3]));
+    assert_eq!(clip_value!(&var, Ints), vec![1, 2, 3]);
+
+    let var = ArgType::Floats(Some(vec![3.14, 9.00]));
+    assert_eq!(clip_value!(&var, Floats), vec![3.14, 9.00]);
+}
+
+#[test]
 #[should_panic]
 fn test_argtype_unmatch() {
     let var = ArgType::Int(100);
