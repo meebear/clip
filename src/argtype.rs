@@ -78,16 +78,16 @@ macro_rules! clip_value_ {
 
 #[macro_export]
 macro_rules! clip_value {
-    (Text, $val:expr) => {
+    ($val:expr, Text) => {
         clip_value_!(Text, None, $val).unwrap().unwrap_or_else(|| "".to_string())
     };
-    (Bool, $val:expr) => {
+    ($val:expr, Bool) => {
         clip_value_!(Bool, false, $val).unwrap()
     };
-    (Custom, $val:expr) => {
+    ($val:expr, Custom) => {
         $val.get_custom_value().unwrap()
     };
-    ($at:ident, $val:expr) => {  /* all integer types */
+    ($val:expr, $at:ident) => {  /* all integer types */
         clip_value_!($at, 0, $val).unwrap()
     };
 }

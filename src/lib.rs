@@ -6,7 +6,7 @@ pub enum ArgType {
     Int64(i64),
     Uint64(u64),
     Bool(bool),
-    Count(i64),
+    Count(usize),
     Custom(Box<dyn TrCustom>),
 }
 
