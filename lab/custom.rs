@@ -8,11 +8,9 @@ impl<T: Any> AsAny for T {
     fn as_any(&self) -> &Any { self }
 }
 
-trait Conv {
+trait Conv: AsAny {
     fn to_string(&self) -> String;
 }
-
-trait AConv: Conv + AsAny {}
 
 struct Count (
     i32,
@@ -24,22 +22,11 @@ impl Conv for Count {
     }
 }
 
-impl AConv for Count {}
-
 struct Custom {
-    v: Box<dyn AConv>,
+    v: Box<dyn Conv>,
 }
 
-#[allow(dead_code)]
-fn getv(c: &Custom) {
-    if let Some(cnt) = (*c.v).as_any().downcast_ref::<Count>() {
-        println!("got cnt {}", cnt.0);
-    } else {
-        println!("not cnt?");
-    }
-}
-
-fn getvt<T: AConv + 'static>(c: &Custom) -> Option<&T> {
+fn getvt<T: Conv + 'static>(c: &Custom) -> Option<&T> {
     if let Some(value) = (*c.v).as_any().downcast_ref::<T>() {
         Some(value)
     } else {
@@ -56,6 +43,3 @@ fn main() {
         None=> println!("n"),
     }
 }
-
-/*
-*/
