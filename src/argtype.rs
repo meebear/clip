@@ -1,5 +1,16 @@
+use std::any::Any;
+
 use super::ArgType;
 use super::ArgType::{Text, Int64, Uint64, Bool, Count, Custom};
+use super::TrCustom;
+
+pub trait AsAny {
+    fn as_any(&self) -> &Any;
+}
+
+impl<T: Any> AsAny for T {
+    fn as_any(&self) -> &Any { self }
+}
 
 impl ArgType {
     /*
@@ -8,8 +19,8 @@ impl ArgType {
     }
     */
 
-    pub fn get_value(&mut self, from: &ArgType) {
-        match (self, from) {
+    pub fn get_value(&self, to: &mut ArgType) {
+        match (to, self) {
             (Text(v), Text(f))   => {
                 if let Some(fs) = f {
                     if let Some(vs) = v {
@@ -28,11 +39,26 @@ impl ArgType {
             (Bool(v), Bool(f))     => { *v = *f; },
             (Count(v), Count(f))   => { *v = *f; },
             (Custom(_), _) => {
-                panic!("use get_custom_value!() for custom type");
+                panic!("use get_custom_value() for custom type");
             }
             _ => {
                 panic!("unmatched argument type")
             },
+        }
+    }
+
+    pub fn get_custom_value<T: TrCustom + 'static>(&self) -> Option<&T> {
+        match self {
+            Custom(c) => {
+                if let Some(value) = (**c).as_any().downcast_ref::<T>() {
+                    Some(value)
+                } else {
+                    panic!("unmatched custom type"); 
+                }
+            },
+            _ => {
+                panic!("not custom type");
+            }
         }
     }
 }
@@ -41,7 +67,7 @@ impl ArgType {
 macro_rules! clip_value_ {
     ($at:ident, $dft:expr, $val:expr) => { {
         let mut v = ArgType::$at($dft);
-        v.get_value($val);
+        $val.get_value(&mut v);
         if let ArgType::$at(c) = v {
             Some(c)
         } else {
@@ -59,9 +85,9 @@ macro_rules! clip_value {
         clip_value_!(Bool, false, $val).unwrap()
     };
     (Custom, $val:expr) => {
-        panic!("TODO");
+        $val.get_custom_value().unwrap()
     };
-    ($at:ident, $val:expr) => {
+    ($at:ident, $val:expr) => {  /* all integer types */
         clip_value_!($at, 0, $val).unwrap()
     };
 }

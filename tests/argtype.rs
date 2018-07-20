@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate clip;
 
-use clip::ArgType;
+use clip::{ArgType, TrCustom};
 
 #[test]
 fn test_argtype_builtin() {
@@ -22,6 +22,13 @@ fn test_argtype_unmatch() {
     assert_eq!(clip_value!(Uint64, &var), 100);
 }
 
+#[derive(PartialEq, Debug)]
+struct Udata(i32);
+impl TrCustom for Udata { }
+
 #[test]
 fn test_argtype_custom() {
+    let c = ArgType::Custom(Box::new(Udata(216)));
+    let v: &Udata = clip_value!(Custom, &c);
+    assert_eq!(*v, Udata(216));
 }

@@ -1,4 +1,5 @@
-use std::any::Any;
+
+pub trait TrCustom: argtype::AsAny {}
 
 pub enum ArgType {
     Text(Option<String>),
@@ -6,7 +7,7 @@ pub enum ArgType {
     Uint64(u64),
     Bool(bool),
     Count(i64),
-    Custom(Box<dyn Any>),
+    Custom(Box<dyn TrCustom>),
 }
 
 pub mod argtype;
