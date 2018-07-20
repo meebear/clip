@@ -3,10 +3,10 @@ pub trait TrCustom: argtype::AsAny {}
 
 pub enum ArgType {
     Text(Option<String>),
-    Int64(i64),
-    Uint64(u64),
-    Bool(bool),
-    Count(usize),
+    Int(i64),
+    Float(f64),
+    BoolFlag(bool),
+    IncFlag(usize),
     Custom(Box<dyn TrCustom>),
 }
 

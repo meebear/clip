@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::ArgType;
-use super::ArgType::{Text, Int64, Uint64, Bool, Count, Custom};
+use super::ArgType::{Text, Int, Float, BoolFlag, IncFlag, Custom};
 use super::TrCustom;
 
 pub trait AsAny {
@@ -34,10 +34,10 @@ impl ArgType {
                     }
                 }
             },
-            (Int64(v), Int64(f))   => { *v = *f; },
-            (Uint64(v), Uint64(f)) => { *v = *f; },
-            (Bool(v), Bool(f))     => { *v = *f; },
-            (Count(v), Count(f))   => { *v = *f; },
+            (Int(v), Int(f))   => { *v = *f; },
+            (Float(v), Float(f)) => { *v = *f; },
+            (BoolFlag(v), BoolFlag(f))     => { *v = *f; },
+            (IncFlag(v), IncFlag(f))   => { *v = *f; },
             (Custom(_), _) => {
                 panic!("use get_custom_value() for custom type");
             }
@@ -81,8 +81,11 @@ macro_rules! clip_value {
     ($val:expr, Text) => {
         clip_value_!(Text, None, $val).unwrap().unwrap_or_else(|| "".to_string())
     };
-    ($val:expr, Bool) => {
-        clip_value_!(Bool, false, $val).unwrap()
+    ($val:expr, BoolFlag) => {
+        clip_value_!(BoolFlag, false, $val).unwrap()
+    };
+    ($val:expr, Float) => {
+        clip_value_!(Float, 0.0, $val).unwrap()
     };
     ($val:expr, Custom) => {
         $val.get_custom_value().unwrap()
