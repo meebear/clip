@@ -62,6 +62,22 @@ impl ArgType {
             }
         }
     }
+
+    pub fn set_value(&mut self, vals: &[&str]) -> Result<(), String> {
+        let n = vals.len();
+        match self {
+            BoolFlag(_) => {
+                if n > 1 {
+                    Err("".to_string())
+                } else {
+                    Ok(())
+                }
+            },
+            _ => {
+                Ok(())
+            }
+        }
+    }
 }
 
 #[macro_export]
