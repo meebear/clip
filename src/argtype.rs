@@ -64,19 +64,60 @@ impl ArgType {
     }
 
     pub fn set_value(&mut self, vals: &[&str]) -> Result<(), String> {
-        let n = vals.len();
         match self {
-            BoolFlag(_) => {
-                if n > 1 {
-                    Err("".to_string())
-                } else {
-                    Ok(())
+            BoolFlag(v) => {
+                *v = true;
+            },
+            IncFlag(v) => {
+                *v += 1;
+            },
+            Int(v) => {
+                match vals[0].parse::<i64>() {
+                    Ok(n) => { *v = n; },
+                    Err(e) => return Err(e.to_string()),
                 }
             },
-            _ => {
-                Ok(())
+            Float(v) => {
+                match vals[0].parse::<f64>() {
+                    Ok(n) => { *v = n; },
+                    Err(e) => return Err(e.to_string()),
+                }
+            },
+            Text(v) => {
+                *v = Some(vals[0].to_string());
+            },
+            Ints(v) => {
+                let mut ints = vec![];
+                for s in vals.iter() {
+                    match s.parse::<i64>() {
+                        Ok(n) => ints.push(n),
+                        Err(e) => return Err(e.to_string()),
+                    }
+                }
+                *v = Some(ints);
+            },
+            Floats(v) => {
+                let mut floats = vec![];
+                for s in vals.iter() {
+                    match s.parse::<f64>() {
+                        Ok(n) => floats.push(n),
+                        Err(e) => return Err(e.to_string()),
+                    }
+                }
+                *v = Some(floats);
+            },
+            Texts(v) => {
+                let mut texts = vec![];
+                for s in vals.iter() {
+                    texts.push(s.to_string());
+                }
+                *v = Some(texts);
+            },
+            Custom(v) => {
+                return v.parse_args(vals);
             }
         }
+        Ok(())
     }
 }
 

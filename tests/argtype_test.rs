@@ -39,11 +39,28 @@ fn test_argtype_unmatch() {
 
 #[derive(PartialEq, Debug)]
 struct Udata(i32, String);
-impl TrCustom for Udata { }
+impl TrCustom for Udata {
+    fn parse_args(&mut self, _vals: &[&str]) -> Result<(), String> {
+        Ok(())
+    }
+}
 
 #[test]
 fn test_argtype_custom() {
     let c = ArgType::Custom(Box::new(Udata(216, "word".to_string())));
     let v: &Udata = clip_value!(&c, Custom);
     assert_eq!(*v, Udata(216, "word".to_string()));
+}
+
+#[test]
+fn test_argtype_set_value() {
+    let mut var = ArgType::Ints(None);
+    match var.set_value(&["12", "23", "34"]) {
+        Ok(_) => {
+        },
+        Err(e) => {
+            panic!("{}", e);
+        }
+    }
+    assert_eq!(clip_value!(&var, Ints), vec![12, 23, 34]);
 }

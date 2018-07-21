@@ -1,5 +1,7 @@
 
-pub trait TrCustom: argtype::AsAny {}
+pub trait TrCustom: argtype::AsAny {
+    fn parse_args(&mut self, vals: &[&str]) -> Result<(), String>;
+}
 
 pub enum ArgType {
     BoolFlag(bool),
