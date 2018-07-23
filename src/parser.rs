@@ -27,7 +27,21 @@ impl ArgKind {
     }
 }
 
-pub struct ArgOpt {
+impl ArgNum {
+    fn check(var: &ArgType) -> Self {
+        match var {
+            ArgType::BoolFlag(_) | ArgType::IncFlag(_)
+                => ArgNum::NoArg,
+            ArgType::Text(_) | ArgType::Int(_) | ArgType::Float(_)
+                => ArgNum::SingleArg,
+            ArgType::Texts(_) | ArgType::Ints(_) | ArgType::Floats(_)
+                => ArgNum::MultiArgs,
+            ArgType::Custom(_) => panic!("custom"),
+        }
+    }
+}
+
+struct ArgOpt {
     var: ArgType,
     required: bool,
 }
@@ -37,7 +51,14 @@ struct ArgIdx {
     argnum: ArgNum,
 }
 
+struct Curr {
+    varid: usize,
+    is_opt: bool,
+}
+
 pub struct Parser {
+    curr: Curr,
+
     opts: Vec<ArgOpt>,
     args: Vec<ArgOpt>,
     index: HashMap<String, ArgIdx>,
@@ -47,6 +68,7 @@ pub struct Parser {
 impl Parser {
     pub fn new() -> Self {
         Parser {
+            curr: Curr{varid: 0, is_opt: false},
             opts: vec![],
             args: vec![],
             index: HashMap::new(),
@@ -54,12 +76,13 @@ impl Parser {
     }
 
     fn add_option_(&mut self, opnames: &[&str], var: ArgType, argnum: ArgNum)
-        -> &mut ArgOpt {
+        -> &mut Self {
         let argopt = ArgOpt {
             var: var,
             required: false,
         };
-        let varid = self.opts.len();
+        self.curr.is_opt = true;
+        self.curr.varid = self.opts.len();
         self.opts.push(argopt);
 
         for opname in opnames {
@@ -70,7 +93,7 @@ impl Parser {
                             panic!("option {} already defined");
                         },
                         Entry::Vacant(vac) => {
-                            vac.insert(ArgIdx {idx: varid, argnum: argnum});
+                            vac.insert(ArgIdx {idx: self.curr.varid, argnum: argnum});
                         }
                     };
                 },
@@ -79,33 +102,26 @@ impl Parser {
                 },
             }
         }
-        self.opts.last_mut().unwrap()
+        self
     }
 
-    pub fn add_option(&mut self, opnames: &[&str], var: ArgType) -> &mut ArgOpt {
-        let argnum = match var {
-            ArgType::BoolFlag(_) | ArgType::IncFlag(_)
-                => ArgNum::NoArg,
-            ArgType::Text(_) | ArgType::Int(_) | ArgType::Float(_)
-                => ArgNum::SingleArg,
-            ArgType::Texts(_) | ArgType::Ints(_) | ArgType::Floats(_)
-                => ArgNum::MultiArgs,
-            ArgType::Custom(_) => panic!("custom"),
-        };
+    pub fn add_option(&mut self, opnames: &[&str], var: ArgType) -> &mut Self {
+        let argnum = ArgNum::check(&var);
         self.add_option_(opnames, var, argnum)
     }
 
     pub fn add_custom_option(&mut self, opnames: &[&str],
-                             var: Box<dyn TrCustom>, argnum: ArgNum) -> &mut ArgOpt {
+                             var: Box<dyn TrCustom>, argnum: ArgNum) -> &mut Self {
         self.add_option_(opnames, ArgType::Custom(var), argnum)
     }
 
-    fn add_argument_(&mut self, name: &str, var: ArgType, argnum: ArgNum) -> &mut ArgOpt {
+    fn add_argument_(&mut self, name: &str, var: ArgType, argnum: ArgNum) -> &mut Self {
         let argopt = ArgOpt {
             var: var,
             required: false,
         };
-        let varid = self.args.len();
+        self.curr.is_opt = false;
+        self.curr.varid = self.args.len();
         self.args.push(argopt);
 
         match self.index.entry(name.to_string()) {
@@ -113,28 +129,32 @@ impl Parser {
                 panic!("option {} already defined");
             },
             Entry::Vacant(vac) => {
-                vac.insert(ArgIdx {idx: varid, argnum: argnum});
+                vac.insert(ArgIdx {idx: self.curr.varid, argnum: argnum});
             }
         };
-
-        self.args.last_mut().unwrap()
+        self
     }
 
-    pub fn add_argument(&mut self, name: &str, var: ArgType) -> &mut ArgOpt {
-        let argnum = match var {
-            ArgType::BoolFlag(_) | ArgType::IncFlag(_)
-                => ArgNum::NoArg,
-            ArgType::Text(_) | ArgType::Int(_) | ArgType::Float(_)
-                => ArgNum::SingleArg,
-            ArgType::Texts(_) | ArgType::Ints(_) | ArgType::Floats(_)
-                => ArgNum::MultiArgs,
-            ArgType::Custom(_) => panic!("custom"),
-        };
+    pub fn add_argument(&mut self, name: &str, var: ArgType) -> &mut Parser {
+        let argnum = ArgNum::check(&var);
         self.add_argument_(name, var, argnum)
     }
 
     pub fn add_custom_argument(&mut self, name: &str, var: ArgType, argnum: ArgNum)
-        -> &mut ArgOpt {
+        -> &mut Self {
         self.add_argument_(name, var, argnum)
+    }
+
+    fn get_curr(&mut self) -> &mut ArgOpt {
+        if self.curr.is_opt {
+            &mut self.opts[self.curr.varid]
+        } else {
+            &mut self.args[self.curr.varid]
+        }
+    }
+
+    pub fn required(&mut self) -> &mut Self {
+        self.get_curr().required = true;
+        self
     }
 }
