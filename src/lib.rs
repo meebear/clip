@@ -18,5 +18,12 @@ pub enum ArgType {
     Custom(Box<dyn TrCustom>),
 }
 
+pub enum ArgNum {
+    NoArg,
+    SingleArg,
+    MultiArgs,
+}
+
 pub mod argtype;
+mod parser;
 
