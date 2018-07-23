@@ -18,6 +18,7 @@ pub enum ArgType {
     Custom(Box<dyn TrCustom>),
 }
 
+#[derive(Clone, Copy)]
 pub enum ArgNum {
     NoArg,
     SingleArg,
@@ -25,5 +26,4 @@ pub enum ArgNum {
 }
 
 pub mod argtype;
-mod parser;
-
+pub mod parser;

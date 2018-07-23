@@ -13,12 +13,9 @@ enum ArgKind {
 impl ArgKind {
     fn check(name: &str) -> ArgKind {
         let mut iter = name.chars();
-        let char1 = iter.next();
-        let char2 = iter.next();
-        let char3 = iter.next();
-        match char1 {
-            Some('-') => match char2 {
-                Some('-') => match char3 {
+        match iter.next() {
+            Some('-') => match iter.next() {
+                Some('-') => match iter.next() {
                     Some(_) => LongOption,
                     None => Delimiter,
                 },
@@ -30,7 +27,7 @@ impl ArgKind {
     }
 }
 
-struct ArgOpt {
+pub struct ArgOpt {
     var: ArgType,
     required: bool,
 }
@@ -40,7 +37,7 @@ struct ArgIdx {
     argnum: ArgNum,
 }
 
-struct Parser {
+pub struct Parser {
     opts: Vec<ArgOpt>,
     args: Vec<ArgOpt>,
     index: HashMap<String, ArgIdx>,
@@ -56,7 +53,8 @@ impl Parser {
         }
     }
 
-    pub fn add_option_(&mut self, opnames: &[&str], var: ArgType, argnum: ArgNum) -> &mut ArgOpt {
+    fn add_option_(&mut self, opnames: &[&str], var: ArgType, argnum: ArgNum)
+        -> &mut ArgOpt {
         let argopt = ArgOpt {
             var: var,
             required: false,
@@ -82,36 +80,61 @@ impl Parser {
             }
         }
         self.opts.last_mut().unwrap()
-        //&mut self.opts[varid]
     }
 
     pub fn add_option(&mut self, opnames: &[&str], var: ArgType) -> &mut ArgOpt {
         let argnum = match var {
-            ArgType::BoolFlag(_) | ArgType::IncFlag(_) => ArgNum::NoArg,
-            ArgType::Text(_) | ArgType::Int(_) | ArgType::Float(_) => ArgNum::SingleArg,
-            ArgType::Texts(_) | ArgType::Ints(_) | ArgType::Floats(_) => ArgNum::MultiArgs,
+            ArgType::BoolFlag(_) | ArgType::IncFlag(_)
+                => ArgNum::NoArg,
+            ArgType::Text(_) | ArgType::Int(_) | ArgType::Float(_)
+                => ArgNum::SingleArg,
+            ArgType::Texts(_) | ArgType::Ints(_) | ArgType::Floats(_)
+                => ArgNum::MultiArgs,
             ArgType::Custom(_) => panic!("custom"),
         };
         self.add_option_(opnames, var, argnum)
     }
 
-    pub fn add_custom_option(&mut self, opnames: &[&str], var: Box<dyn TrCustom>, argnum: ArgNum) -> &ArgOpt {
+    pub fn add_custom_option(&mut self, opnames: &[&str],
+                             var: Box<dyn TrCustom>, argnum: ArgNum) -> &mut ArgOpt {
         self.add_option_(opnames, ArgType::Custom(var), argnum)
     }
 
-/*
-    pub fn add_positional(&mut self, name: &str, at: ArgType) -> &ArgOpt {
-        &ArgOpt {
-            var: ArgType::BoolFlag(false),
+    fn add_argument_(&mut self, name: &str, var: ArgType, argnum: ArgNum) -> &mut ArgOpt {
+        let argopt = ArgOpt {
+            var: var,
             required: false,
-        }
+        };
+        let varid = self.args.len();
+        self.args.push(argopt);
+
+        match self.index.entry(name.to_string()) {
+            Entry::Occupied(_) => {
+                panic!("option {} already defined");
+            },
+            Entry::Vacant(vac) => {
+                vac.insert(ArgIdx {idx: varid, argnum: argnum});
+            }
+        };
+
+        self.args.last_mut().unwrap()
     }
 
-    pub fn add_custom_positional(&mut self, opnames: &[&str], argnum: ArgNum) -> &ArgOpt {
-        &ArgOpt {
-            var: ArgType::BoolFlag(false),
-            required: false,
-        }
+    pub fn add_argument(&mut self, name: &str, var: ArgType) -> &mut ArgOpt {
+        let argnum = match var {
+            ArgType::BoolFlag(_) | ArgType::IncFlag(_)
+                => ArgNum::NoArg,
+            ArgType::Text(_) | ArgType::Int(_) | ArgType::Float(_)
+                => ArgNum::SingleArg,
+            ArgType::Texts(_) | ArgType::Ints(_) | ArgType::Floats(_)
+                => ArgNum::MultiArgs,
+            ArgType::Custom(_) => panic!("custom"),
+        };
+        self.add_argument_(name, var, argnum)
     }
-    */
+
+    pub fn add_custom_argument(&mut self, name: &str, var: ArgType, argnum: ArgNum)
+        -> &mut ArgOpt {
+        self.add_argument_(name, var, argnum)
+    }
 }
