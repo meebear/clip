@@ -57,7 +57,7 @@ struct Curr {
 }
 
 pub struct Parser {
-    curr: Curr,
+    curr: Option<Curr>,
 
     opts: Vec<ArgOpt>,
     args: Vec<ArgOpt>,
@@ -68,7 +68,7 @@ pub struct Parser {
 impl Parser {
     pub fn new() -> Self {
         Parser {
-            curr: Curr{varid: 0, is_opt: false},
+            curr: None,
             opts: vec![],
             args: vec![],
             index: HashMap::new(),
@@ -81,8 +81,9 @@ impl Parser {
             var: var,
             required: false,
         };
-        self.curr.is_opt = true;
-        self.curr.varid = self.opts.len();
+        let is_opt = true;
+        let varid = self.opts.len();
+        self.curr = Some(Curr{varid, is_opt});
         self.opts.push(argopt);
 
         for opname in opnames {
@@ -93,7 +94,7 @@ impl Parser {
                             panic!("option {} already defined");
                         },
                         Entry::Vacant(vac) => {
-                            vac.insert(ArgIdx {idx: self.curr.varid, argnum: argnum});
+                            vac.insert(ArgIdx {idx: varid, argnum: argnum});
                         }
                     };
                 },
@@ -120,8 +121,9 @@ impl Parser {
             var: var,
             required: false,
         };
-        self.curr.is_opt = false;
-        self.curr.varid = self.args.len();
+        let is_opt = true;
+        let varid = self.opts.len();
+        self.curr = Some(Curr{varid, is_opt});
         self.args.push(argopt);
 
         match self.index.entry(name.to_string()) {
@@ -129,7 +131,7 @@ impl Parser {
                 panic!("option {} already defined");
             },
             Entry::Vacant(vac) => {
-                vac.insert(ArgIdx {idx: self.curr.varid, argnum: argnum});
+                vac.insert(ArgIdx {idx: varid, argnum: argnum});
             }
         };
         self
@@ -146,10 +148,17 @@ impl Parser {
     }
 
     fn get_curr(&mut self) -> &mut ArgOpt {
-        if self.curr.is_opt {
-            &mut self.opts[self.curr.varid]
-        } else {
-            &mut self.args[self.curr.varid]
+        match &self.curr {
+            Some(c) => {
+                if c.is_opt {
+                    &mut self.opts[c.varid]
+                } else {
+                    &mut self.args[c.varid]
+                }
+            },
+            None => {
+                panic!("no current option set");
+            }
         }
     }
 
