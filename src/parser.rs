@@ -1,3 +1,4 @@
+use std::env;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use super::{ArgType, ArgNum, TrCustom};
@@ -166,4 +167,66 @@ impl Parser {
         self.get_curr().required = true;
         self
     }
+
+    pub fn parse(&mut self) -> Result<(), String> {
+        let mut args = env::args();
+        args.next(); // skip the program name
+        loop {
+            match args.next() {
+                Some(s) => {
+                    match ArgKind::check(&s) {
+                        LongOption => { self.parse_long_option(&s, &mut args)? },
+                        ShortOption => { self.parse_short_options(&s, &args)? },
+                        Positional => { self.parse_argument(&s, &args)? },
+                        Delimiter => { self.parse_delimiter(&args)? }
+                    };
+                },
+                None => { break; },
+            }
+        }
+        Ok(())
+    }
+
+    fn parse_long_option(&mut self, name: &str, args: &mut env::Args) -> Result<(), String> {
+        let mut iter = name.splitn(2, '=');
+        let opname = iter.next().unwrap();
+        let valref = iter.next();
+        if let Some(ix) = self.index.get(opname) {
+            //let argopt = &self.opts[ix.idx];
+            match ix.argnum {
+                ArgNum::MultiArgs | ArgNum::SingleArg => {
+                    if let Some(val) = valref {
+                        // set val
+                    } else {
+                        if let Some(val) = args.next() {
+                            // set val
+                        } else {
+                            // error no arg
+                        }
+                    }
+                },
+                ArgNum::NoArg => {
+                },
+            }
+        }
+        Ok(())
+    }
+
+    fn parse_short_options(&mut self, opt: &str, args: &env::Args) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn parse_argument(&mut self, opt: &str, args: &env::Args) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn parse_delimiter(&mut self, args: &env::Args) -> Result<(), String> {
+        Ok(())
+    }
+}
+
+fn get_arg<'a>(name: &'a str, args: &env::Args) -> Result<&'a str, String> {
+    let iter = name.splitn(2, '=');
+
+    Err("?".to_string())
 }
