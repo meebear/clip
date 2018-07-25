@@ -1,8 +1,8 @@
 use std::env;
-use std::collections::HashMap;
 use std::collections::hash_map::Entry;
-use super::{ArgType, ArgNum, TrCustom};
+use super::{Parser, ArgType, ArgNum, TrCustom};
 use self::ArgKind::{ShortOption, LongOption, Positional, Delimiter};
+use std::collections::HashMap;
 
 enum ArgKind {
     ShortOption,
@@ -42,27 +42,21 @@ impl ArgNum {
     }
 }
 
-struct ArgOpt {
+#[derive(Debug)]
+pub struct ArgOpt {
     var: ArgType,
     required: bool,
 }
 
-struct ArgIdx {
+#[derive(Debug)]
+pub struct ArgIdx {
     idx: usize,
     argnum: ArgNum,
 }
 
-struct Curr {
+pub struct Curr {
     varid: usize,
     is_opt: bool,
-}
-
-pub struct Parser {
-    curr: Option<Curr>,
-
-    opts: Vec<ArgOpt>,
-    args: Vec<ArgOpt>,
-    index: HashMap<String, ArgIdx>,
 }
 
 
@@ -168,6 +162,21 @@ impl Parser {
         self
     }
 
+    pub fn dump(&self) {
+        println!("Registered-Options:");
+        for (i, o) in self.opts.iter().enumerate() {
+            println!(" {}: {:?}", i, o);
+        }
+        println!("\nRegistered-Positional-Arguments:");
+        for (i, a) in self.args.iter().enumerate() {
+            println!(" {}: {:?}", i, a);
+        }
+        println!("\nGenerated Index:");
+        for (k, v) in self.index.iter() {
+            println!(" {:?}: {:?}", k, v);
+        }
+    }
+
     pub fn parse(&mut self) -> Result<(), String> {
         let mut args = env::args();
         args.next(); // skip the program name
@@ -223,10 +232,4 @@ impl Parser {
     fn parse_delimiter(&mut self, args: &env::Args) -> Result<(), String> {
         Ok(())
     }
-}
-
-fn get_arg<'a>(name: &'a str, args: &env::Args) -> Result<&'a str, String> {
-    let iter = name.splitn(2, '=');
-
-    Err("?".to_string())
 }

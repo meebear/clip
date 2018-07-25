@@ -1,8 +1,11 @@
+use std::fmt::Debug;
+use std::collections::HashMap;
 
-pub trait TrCustom: argtype::AsAny {
+pub trait TrCustom: argtype::AsAny + Debug {
     fn parse_args(&mut self, vals: &[&str]) -> Result<(), String>;
 }
 
+#[derive(Debug)]
 pub enum ArgType {
     BoolFlag(bool),
     IncFlag(usize),
@@ -18,11 +21,19 @@ pub enum ArgType {
     Custom(Box<dyn TrCustom>),
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum ArgNum {
     NoArg,
     SingleArg,
     MultiArgs,
+}
+
+pub struct Parser {
+    curr: Option<parser::Curr>,
+
+    opts: Vec<parser::ArgOpt>,
+    args: Vec<parser::ArgOpt>,
+    index: HashMap<String, parser::ArgIdx>,
 }
 
 pub mod argtype;
