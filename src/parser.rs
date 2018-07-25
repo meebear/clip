@@ -3,6 +3,7 @@ use std::collections::hash_map::Entry;
 use super::{Parser, ArgType, ArgNum, TrCustom};
 use self::ArgKind::{ShortOption, LongOption, Positional, Delimiter};
 use std::collections::HashMap;
+use std::fmt::{Display, Formatter, Error};
 
 enum ArgKind {
     ShortOption,
@@ -42,16 +43,26 @@ impl ArgNum {
     }
 }
 
+impl Display for ArgNum {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
+        match self {
+            ArgNum::NoArg => write!(f, "no argument"),
+            ArgNum::SingleArg => write!(f, "single argument"),
+            ArgNum::MultiArgs => write!(f, "multiple arguments"),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct ArgOpt {
     var: ArgType,
     required: bool,
+    argnum: ArgNum,
 }
 
 #[derive(Debug)]
 pub struct ArgIdx {
     idx: usize,
-    argnum: ArgNum,
 }
 
 pub struct Curr {
@@ -75,6 +86,7 @@ impl Parser {
         let argopt = ArgOpt {
             var: var,
             required: false,
+            argnum: argnum,
         };
         let is_opt = true;
         let varid = self.opts.len();
@@ -89,7 +101,7 @@ impl Parser {
                             panic!("option {} already defined");
                         },
                         Entry::Vacant(vac) => {
-                            vac.insert(ArgIdx {idx: varid, argnum: argnum});
+                            vac.insert(ArgIdx {idx: varid });
                         }
                     };
                 },
@@ -115,6 +127,7 @@ impl Parser {
         let argopt = ArgOpt {
             var: var,
             required: false,
+            argnum: argnum,
         };
         let is_opt = true;
         let varid = self.opts.len();
@@ -126,7 +139,7 @@ impl Parser {
                 panic!("option {} already defined");
             },
             Entry::Vacant(vac) => {
-                vac.insert(ArgIdx {idx: varid, argnum: argnum});
+                vac.insert(ArgIdx {idx: varid});
             }
         };
         self
@@ -175,6 +188,7 @@ impl Parser {
         for (k, v) in self.index.iter() {
             println!(" {:?}: {:?}", k, v);
         }
+        println!("------PARSE--------\n");
     }
 
     pub fn parse(&mut self) -> Result<(), String> {
@@ -201,24 +215,30 @@ impl Parser {
         let opname = iter.next().unwrap();
         let valref = iter.next();
         if let Some(ix) = self.index.get(opname) {
-            //let argopt = &self.opts[ix.idx];
-            match ix.argnum {
+            let argopt = &self.opts[ix.idx];
+            match argopt.argnum {
                 ArgNum::MultiArgs | ArgNum::SingleArg => {
                     if let Some(val) = valref {
-                        // set val
+                        println!("Set '{}' = '{}'", opname, val);
                     } else {
                         if let Some(val) = args.next() {
-                            // set val
+                            println!("Set '{}' = '{}'", opname, val);
                         } else {
-                            // error no arg
+                            return Err(format!("Option '{}' expects {}",
+                                               opname, argopt.argnum));
                         }
                     }
                 },
                 ArgNum::NoArg => {
+                    if let Some(_) = valref {
+                        return Err(format!("Option '{}' takes no argument", opname));
+                    }
                 },
             }
+            Ok(())
+        } else {
+            Err(format!("Option '{}' not recognized", opname))
         }
-        Ok(())
     }
 
     fn parse_short_options(&mut self, opt: &str, args: &env::Args) -> Result<(), String> {
