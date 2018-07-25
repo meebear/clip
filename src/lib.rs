@@ -29,7 +29,7 @@ pub enum ArgNum {
 }
 
 pub struct Parser {
-    curr: Option<parser::Curr>,
+    curr: Option<parser::ArgIdx>,
 
     opts: Vec<parser::ArgOpt>,
 

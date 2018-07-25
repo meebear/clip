@@ -63,10 +63,6 @@ pub struct ArgOpt {
 #[derive(Debug)]
 pub struct ArgIdx {
     idx: usize,
-}
-
-pub struct Curr {
-    varid: usize,
     is_opt: bool,
 }
 
@@ -89,9 +85,8 @@ impl Parser {
             required: false,
             argnum: argnum,
         };
-        let is_opt = true;
         let varid = self.opts.len();
-        self.curr = Some(Curr{varid, is_opt});
+        self.curr = Some(ArgIdx{idx: varid, is_opt: true});
         self.opts.push(argopt);
 
         for opname in opnames {
@@ -102,12 +97,15 @@ impl Parser {
                             panic!("option {} already defined", opname);
                         },
                         Entry::Vacant(vac) => {
-                            vac.insert(ArgIdx {idx: varid });
+                            vac.insert(ArgIdx {idx: varid, is_opt: true});
                         }
                     };
                 },
-                Positional | Delimiter => {
-                    panic!("none option!");
+                Positional => {
+                    panic!("non option");
+                },
+                Delimiter => {
+                    panic!("delimiter -- cannot be added");
                 },
             }
         }
@@ -128,14 +126,16 @@ impl Parser {
         if let ArgNum::NoArg = argnum {
             panic!("positional argument must take arguments");
         }
+        if name == "--" {
+            panic!("delimiter -- cannot be added");
+        }
         let argopt = ArgOpt {
             var: var,
             required: false,
             argnum: argnum,
         };
-        let is_opt = true;
-        let varid = self.opts.len();
-        self.curr = Some(Curr{varid, is_opt});
+        let varid = self.args.len();
+        self.curr = Some(ArgIdx{idx: varid, is_opt: false});
         self.args.push(argopt);
 
         match self.index.entry(name.to_string()) {
@@ -143,7 +143,7 @@ impl Parser {
                 panic!("option {} already defined", name);
             },
             Entry::Vacant(vac) => {
-                vac.insert(ArgIdx {idx: varid});
+                vac.insert(ArgIdx {idx: varid, is_opt: false});
             }
         };
         self
@@ -163,9 +163,9 @@ impl Parser {
         match &self.curr {
             Some(c) => {
                 if c.is_opt {
-                    &mut self.opts[c.varid]
+                    &mut self.opts[c.idx]
                 } else {
-                    &mut self.args[c.varid]
+                    &mut self.args[c.idx]
                 }
             },
             None => {
@@ -206,7 +206,7 @@ impl Parser {
                         LongOption => { self.parse_long_option(&s, &mut args)? },
                         ShortOption => { self.parse_short_options(&s, &mut args)? },
                         Positional => { self.parse_argument(&s)? },
-                        Delimiter => { self.parse_delimiter(&args)? }
+                        Delimiter => { self.parse_delimiter(&mut args)? }
                     };
                 },
                 None => { break; },
@@ -298,7 +298,26 @@ impl Parser {
         Ok(())
     }
 
-    fn parse_delimiter(&mut self, args: &env::Args) -> Result<(), String> {
+    fn parse_delimiter(&mut self, args: &mut env::Args) -> Result<(), String> {
+        match self.index.entry("--".to_string()) {
+            Entry::Occupied(_) => { },
+            Entry::Vacant(vac) => {
+                let argopt = ArgOpt {
+                    var: ArgType::Texts(None),
+                    required: false,
+                    argnum: ArgNum::MultiArgs,
+                };
+                let varid = self.opts.len();
+                self.opts.push(argopt);
+                vac.insert(ArgIdx {idx: varid, is_opt: true});
+            }
+        };
+        if let Some(ix) = self.index.get("--") {
+            let mut vals = vec![];
+            args.for_each(|arg| { vals.push(arg) });
+            let _argopt = &self.opts[ix.idx];
+            println!("set '--' to {:?}", vals);
+        }
         Ok(())
     }
 }
