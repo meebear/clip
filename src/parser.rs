@@ -77,6 +77,7 @@ impl Parser {
             curr: None,
             opts: vec![],
             args: vec![],
+            next_arg: 0,
             index: HashMap::new(),
         }
     }
@@ -98,7 +99,7 @@ impl Parser {
                 ShortOption | LongOption => {
                     match self.index.entry(opname.to_string()) {
                         Entry::Occupied(_) => {
-                            panic!("option {} already defined");
+                            panic!("option {} already defined", opname);
                         },
                         Entry::Vacant(vac) => {
                             vac.insert(ArgIdx {idx: varid });
@@ -124,6 +125,9 @@ impl Parser {
     }
 
     fn add_argument_(&mut self, name: &str, var: ArgType, argnum: ArgNum) -> &mut Self {
+        if let ArgNum::NoArg = argnum {
+            panic!("positional argument must take arguments");
+        }
         let argopt = ArgOpt {
             var: var,
             required: false,
@@ -136,7 +140,7 @@ impl Parser {
 
         match self.index.entry(name.to_string()) {
             Entry::Occupied(_) => {
-                panic!("option {} already defined");
+                panic!("option {} already defined", name);
             },
             Entry::Vacant(vac) => {
                 vac.insert(ArgIdx {idx: varid});
@@ -192,6 +196,7 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<(), String> {
+        self.next_arg = 0;
         let mut args = env::args();
         args.next(); // skip the program name
         loop {
@@ -200,7 +205,7 @@ impl Parser {
                     match ArgKind::check(&s) {
                         LongOption => { self.parse_long_option(&s, &mut args)? },
                         ShortOption => { self.parse_short_options(&s, &mut args)? },
-                        Positional => { self.parse_argument(&s, &args)? },
+                        Positional => { self.parse_argument(&s)? },
                         Delimiter => { self.parse_delimiter(&args)? }
                     };
                 },
@@ -283,7 +288,13 @@ impl Parser {
         Ok(())
     }
 
-    fn parse_argument(&mut self, opt: &str, args: &env::Args) -> Result<(), String> {
+    fn parse_argument(&mut self, name: &str) -> Result<(), String> {
+        if self.next_arg >= self.args.len() {
+            panic!("extra argument '{}'", name);
+        }
+        let _argopt = &self.args[self.next_arg];
+        println!("Set positional {} = '{}'", self.next_arg, name);
+        self.next_arg += 1;
         Ok(())
     }
 

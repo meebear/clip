@@ -32,7 +32,10 @@ pub struct Parser {
     curr: Option<parser::Curr>,
 
     opts: Vec<parser::ArgOpt>,
+
     args: Vec<parser::ArgOpt>,
+    next_arg: usize,
+
     index: HashMap<String, parser::ArgIdx>,
 }
 
