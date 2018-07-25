@@ -199,7 +199,7 @@ impl Parser {
                 Some(s) => {
                     match ArgKind::check(&s) {
                         LongOption => { self.parse_long_option(&s, &mut args)? },
-                        ShortOption => { self.parse_short_options(&s, &args)? },
+                        ShortOption => { self.parse_short_options(&s, &mut args)? },
                         Positional => { self.parse_argument(&s, &args)? },
                         Delimiter => { self.parse_delimiter(&args)? }
                     };
@@ -224,24 +224,62 @@ impl Parser {
                         if let Some(val) = args.next() {
                             println!("Set '{}' = '{}'", opname, val);
                         } else {
-                            return Err(format!("Option '{}' expects {}",
+                            return Err(format!("Option '--{}' expects {}",
                                                opname, argopt.argnum));
                         }
                     }
                 },
                 ArgNum::NoArg => {
                     if let Some(_) = valref {
-                        return Err(format!("Option '{}' takes no argument", opname));
+                        return Err(format!("Option '--{}' takes no argument", opname));
                     }
                 },
             }
             Ok(())
         } else {
-            Err(format!("Option '{}' not recognized", opname))
+            Err(format!("Option '--{}' not recognized", opname))
         }
     }
 
-    fn parse_short_options(&mut self, opt: &str, args: &env::Args) -> Result<(), String> {
+    fn parse_short_options(&mut self, name: &str, args: &mut env::Args) -> Result<(), String> {
+        let mut iter = name.char_indices().peekable();
+        iter.next(); // to skip leading -
+        loop {
+            match iter.next() {
+                Some((i, c)) => {
+                    if let Some(ix) = self.index.get(&format!("-{}", c)) {
+                        let argopt = &self.opts[ix.idx];
+                        match argopt.argnum {
+                            ArgNum::MultiArgs | ArgNum::SingleArg => {
+                                let val = if let Some((ie, '=')) = iter.peek() {
+                                          &name[ie+1..]
+                                      } else {
+                                          &name[i+1..]
+                                      };
+
+                                if val.len() > 0 {
+                                    println!("Set '-{}' to {}", c, val);
+                                } else {
+                                    if let Some(val) = args.next() {
+                                        println!("Set '-{}' = '{}'", c, val);
+                                    } else {
+                                        return Err(format!("Option '-{}' expects {}",
+                                                           c, argopt.argnum));
+                                    }
+                                }
+                                break;
+                            },
+                            ArgNum::NoArg => {
+                                println!("Set '-{}'", c);
+                            },
+                        }
+                    } else {
+                        return Err(format!("Option '-{}' not recognized", c))
+                    }
+                },
+                None => { break; },
+            }
+        }
         Ok(())
     }
 
