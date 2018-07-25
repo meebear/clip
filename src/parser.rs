@@ -313,10 +313,13 @@ impl Parser {
             }
         };
         if let Some(ix) = self.index.get("--") {
-            let mut vals = vec![];
-            args.for_each(|arg| { vals.push(arg) });
-            let _argopt = &self.opts[ix.idx];
-            println!("set '--' to {:?}", vals);
+            let vals: Vec<String> = args.collect();
+            let mut vrefs = vec![];
+            for val in &vals {
+                vrefs.push(&val[..]);
+            }
+            let argopt = &self.opts[ix.idx];
+            //var.set_value(&vrefs[..])?;
         }
         Ok(())
     }
