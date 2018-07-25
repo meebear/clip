@@ -292,8 +292,9 @@ impl Parser {
         if self.next_arg >= self.args.len() {
             panic!("extra argument '{}'", name);
         }
-        let _argopt = &self.args[self.next_arg];
+        let argopt = &mut self.args[self.next_arg];
         println!("Set positional {} = '{}'", self.next_arg, name);
+        argopt.set_value(name)?;
         self.next_arg += 1;
         Ok(())
     }
@@ -313,14 +314,17 @@ impl Parser {
             }
         };
         if let Some(ix) = self.index.get("--") {
-            let vals: Vec<String> = args.collect();
-            let mut vrefs = vec![];
-            for val in &vals {
-                vrefs.push(&val[..]);
-            }
-            let argopt = &self.opts[ix.idx];
-            //var.set_value(&vrefs[..])?;
+            let vals: Vec<String> = args.collect(); // TODO how to do this more effeciently?
+            let vrefs: Vec<&str> = vals.iter().map(|s| &s[..]).collect();
+            let argopt = &mut self.opts[ix.idx];
+            argopt.var.set_value(&vrefs[..])?;
         }
+        Ok(())
+    }
+}
+
+impl ArgOpt {
+    fn set_value(&mut self, val: &str) -> Result<(), String> {
         Ok(())
     }
 }
