@@ -220,14 +220,16 @@ impl Parser {
         let opname = iter.next().unwrap();
         let valref = iter.next();
         if let Some(ix) = self.index.get(opname) {
-            let argopt = &self.opts[ix.idx];
+            let argopt = &mut self.opts[ix.idx];
             match argopt.argnum {
                 ArgNum::MultiArgs | ArgNum::SingleArg => {
                     if let Some(val) = valref {
                         println!("Set '{}' = '{}'", opname, val);
+                        argopt.set_value(val)?;
                     } else {
                         if let Some(val) = args.next() {
                             println!("Set '{}' = '{}'", opname, val);
+                            argopt.set_value(&val)?;
                         } else {
                             return Err(format!("Option '--{}' expects {}",
                                                opname, argopt.argnum));
@@ -253,7 +255,7 @@ impl Parser {
             match iter.next() {
                 Some((i, c)) => {
                     if let Some(ix) = self.index.get(&format!("-{}", c)) {
-                        let argopt = &self.opts[ix.idx];
+                        let argopt = &mut self.opts[ix.idx];
                         match argopt.argnum {
                             ArgNum::MultiArgs | ArgNum::SingleArg => {
                                 let val = if let Some((ie, '=')) = iter.peek() {
@@ -264,9 +266,11 @@ impl Parser {
 
                                 if val.len() > 0 {
                                     println!("Set '-{}' to {}", c, val);
+                                    argopt.set_value(val)?;
                                 } else {
                                     if let Some(val) = args.next() {
                                         println!("Set '-{}' = '{}'", c, val);
+                                        argopt.set_value(&val)?;
                                     } else {
                                         return Err(format!("Option '-{}' expects {}",
                                                            c, argopt.argnum));
@@ -275,6 +279,7 @@ impl Parser {
                                 break;
                             },
                             ArgNum::NoArg => {
+                                argopt.set_value("")?;
                                 println!("Set '-{}'", c);
                             },
                         }
@@ -325,6 +330,6 @@ impl Parser {
 
 impl ArgOpt {
     fn set_value(&mut self, val: &str) -> Result<(), String> {
-        Ok(())
+        self.var.set_value(&val.split(',').collect::<Vec<&str>>())
     }
 }
