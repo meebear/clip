@@ -30,13 +30,15 @@ pub enum ArgNum {
 
 pub struct Parser {
     curr: Option<parser::ArgIdx>,
-
     opts: Vec<parser::ArgOpt>,
-
     args: Vec<parser::ArgOpt>,
     next_arg: usize,
 
     index: HashMap<String, parser::ArgIdx>,
+
+    about: String,
+
+    subcmds: Vec<Box<Parser>>,
 }
 
 pub mod argtype;

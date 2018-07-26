@@ -75,7 +75,17 @@ impl Parser {
             args: vec![],
             next_arg: 0,
             index: HashMap::new(),
+            about: String::new(),
+            subcmds: vec![],
         }
+    }
+
+    pub fn register_subcmd(&mut self, subcmd: Box<Parser>) {
+        self.subcmds.push(subcmd); // this will copy the struct to heap..
+    }
+
+    pub fn about(&mut self, info: &str) {
+        self.about.push_str(info);
     }
 
     fn add_option_(&mut self, opnames: &[&str], var: ArgType, argnum: ArgNum)
