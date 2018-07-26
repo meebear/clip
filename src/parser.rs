@@ -348,12 +348,15 @@ impl ArgOpt {
 
 #[macro_export]
 macro_rules! clip_value {
-    ($parser:ident, $key:expr, Text) => {
+    ($parser:ident, $key:expr, $at:ident) => {
         match $parser.get_argopt($key) {
             Some(argopt) => {
-                Some(clip_value_at!(argopt.var, Text))
+                clip_value_at!(argopt.var, $at)
             },
-            None => None,
+            None => {
+                panic!("cannot find option by '{}'", stringify!($key));
+                //None
+            },
         }
     };
 }
