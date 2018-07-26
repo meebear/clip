@@ -66,20 +66,27 @@ impl ArgType {
     pub fn set_value(&mut self, vals: &[&str]) -> Result<(), String> {
         match self {
             BoolFlag(v) => {
-                *v = true;
+                *v = Some(true);
             },
             IncFlag(v) => {
-                *v += 1;
+                match v {
+                    Some(vi) => {
+                        *vi += 1;
+                    },
+                    None => {
+                        *v = Some(1);
+                    },
+                }
             },
             Int(v) => {
                 match vals[0].parse::<i64>() {
-                    Ok(n) => { *v = n; },
+                    Ok(n) => { *v = Some(n); },
                     Err(e) => return Err(e.to_string()),
                 }
             },
             Float(v) => {
                 match vals[0].parse::<f64>() {
-                    Ok(n) => { *v = n; },
+                    Ok(n) => { *v = Some(n); },
                     Err(e) => return Err(e.to_string()),
                 }
             },
@@ -136,29 +143,10 @@ macro_rules! clip_value_ {
 
 #[macro_export]
 macro_rules! clip_value {
-    ($val:expr, Text) => {
-        clip_value_!(Text, None, $val).unwrap().unwrap_or_else(|| "".to_string())
-    };
-    ($val:expr, Texts) => {
-        clip_value_!(Texts, None, $val).unwrap().unwrap_or_else(|| vec![])
-    };
-    ($val:expr, Ints) => {
-        clip_value_!(Ints, None, $val).unwrap().unwrap_or_else(|| vec![])
-    };
-    ($val:expr, Floats) => {
-        clip_value_!(Floats, None, $val).unwrap().unwrap_or_else(|| vec![])
-    };
-    ($val:expr, BoolFlag) => {
-        clip_value_!(BoolFlag, false, $val).unwrap()
-    };
-    ($val:expr, Float) => {
-        clip_value_!(Float, 0.0, $val).unwrap()
-    };
     ($val:expr, Custom) => {
         $val.get_custom_value().unwrap()
     };
-    // Int, IncFlag
-    ($val:expr, $at:ident) => {  /* all integer types */
-        clip_value_!($at, 0, $val).unwrap()
+    ($val:expr, $at:ident) => {
+        clip_value_!($at, None, $val).unwrap()
     };
 }

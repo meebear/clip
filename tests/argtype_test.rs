@@ -6,35 +6,41 @@ use clip::{ArgType, TrCustom};
 #[test]
 fn test_argtype_builtin() {
     let var = ArgType::Text(Some("helo".to_string()));
-    assert_eq!(clip_value!(&var, Text), "helo");
+    assert_eq!(clip_value!(&var, Text), Some("helo".to_string()));
 
     let var = ArgType::Text(None);
-    assert_eq!(clip_value!(&var, Text), "");
+    assert_eq!(clip_value!(&var, Text), None);
 
-    let var = ArgType::BoolFlag(true);
-    assert_eq!(clip_value!(&var, BoolFlag), true);
+    let var = ArgType::BoolFlag(Some(true));
+    assert_eq!(clip_value!(&var, BoolFlag), Some(true));
 
-    let var = ArgType::IncFlag(1001);
-    assert_eq!(clip_value!(&var, IncFlag), 1001);
+    let var = ArgType::IncFlag(Some(1001));
+    assert_eq!(clip_value!(&var, IncFlag), Some(1001));
+
+    let var = ArgType::Float(Some(100.1));
+    assert_eq!(clip_value!(&var, Float), Some(100.1));
+
+    let var = ArgType::Int(Some(102));
+    assert_eq!(clip_value!(&var, Int), Some(102));
 }
 
 #[test]
 fn test_argtype_array_builtin() {
     let var = ArgType::Texts(Some(vec!["helo".to_string(), "wold".to_string()]));
-    assert_eq!(clip_value!(&var, Texts), vec!["helo", "wold"]);
+    assert_eq!(clip_value!(&var, Texts), Some(vec!["helo".to_string(), "wold".to_string()]));
 
     let var = ArgType::Ints(Some(vec![1, 2, 3]));
-    assert_eq!(clip_value!(&var, Ints), vec![1, 2, 3]);
+    assert_eq!(clip_value!(&var, Ints), Some(vec![1, 2, 3]));
 
     let var = ArgType::Floats(Some(vec![3.14, 9.00]));
-    assert_eq!(clip_value!(&var, Floats), vec![3.14, 9.00]);
+    assert_eq!(clip_value!(&var, Floats), Some(vec![3.14, 9.00]));
 }
 
 #[test]
 #[should_panic]
 fn test_argtype_unmatch() {
-    let var = ArgType::Int(100);
-    assert_eq!(clip_value!(&var, Float), 100.0);
+    let var = ArgType::Int(Some(100));
+    assert_eq!(clip_value!(&var, Float), Some(100.0));
 }
 
 #[derive(PartialEq, Debug)]
@@ -62,5 +68,5 @@ fn test_argtype_set_value() {
             panic!("{}", e);
         }
     }
-    assert_eq!(clip_value!(&var, Ints), vec![12, 23, 34]);
+    assert_eq!(clip_value!(&var, Ints), Some(vec![12, 23, 34]));
 }

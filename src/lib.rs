@@ -7,12 +7,12 @@ pub trait TrCustom: argtype::AsAny + Debug {
 
 #[derive(Debug)]
 pub enum ArgType {
-    BoolFlag(bool),
-    IncFlag(usize),
+    BoolFlag(Option<bool>),
+    IncFlag(Option<usize>),
 
     Text(Option<String>),
-    Int(i64),
-    Float(f64),
+    Int(Option<i64>),
+    Float(Option<f64>),
 
     Texts(Option<Vec<String>>),
     Ints(Option<Vec<i64>>),
