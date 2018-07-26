@@ -1,6 +1,5 @@
 use std::str::CharIndices;
-use std::io::Result as IoResult;
-use std::io::Write;
+use std::io::{Result, Write};
 
 struct WordsIter<'a> {
     data: &'a str,
@@ -52,7 +51,7 @@ impl<'a> Iterator for WordsIter<'a> {
 
 // ?AK? review how other result types are converted to Result type, '?'
 pub fn wrap_text(buf: &mut Write, data: &str, width: usize, indent: usize)
-    -> IoResult<()>
+    -> Result<()>
 {
     let mut witer = WordsIter::new(data);
     let mut off = indent;

@@ -1,9 +1,11 @@
 use std::env;
+use std::io;
 use std::collections::hash_map::Entry;
 use super::{Parser, ArgType, ArgNum, TrCustom};
 use self::ArgKind::{ShortOption, LongOption, Positional, Delimiter};
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Error};
+use super::help::wrap_text;
 
 enum ArgKind {
     ShortOption,
@@ -75,7 +77,7 @@ impl Parser {
             args: vec![],
             next_arg: 0,
             index: HashMap::new(),
-            about: String::new(),
+            about: vec![],
             subcmds: vec![],
         }
     }
@@ -85,7 +87,7 @@ impl Parser {
     }
 
     pub fn about(&mut self, info: &str) {
-        self.about.push_str(info);
+        self.about.push(info.to_string());
     }
 
     fn add_option_(&mut self, opnames: &[&str], var: ArgType, argnum: ArgNum)
@@ -348,6 +350,17 @@ impl Parser {
             None
         }
     }
+
+    pub fn print_usage(&self) {
+        for s in &self.about {
+            if let Err(e) = wrap_text(&mut io::stdout(), s, 80, 0) {
+                println!("{}", e);
+                break;
+            }
+            println!();
+            println!();
+        }
+    }
 }
 
 impl ArgOpt {
@@ -365,7 +378,6 @@ macro_rules! clip_value {
             },
             None => {
                 panic!("cannot find option by '{}'", stringify!($key));
-                //None
             },
         }
     };

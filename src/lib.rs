@@ -36,7 +36,7 @@ pub struct Parser {
 
     index: HashMap<String, parser::ArgIdx>,
 
-    about: String,
+    about: Vec<String>,
 
     subcmds: Vec<Box<Parser>>,
 }
