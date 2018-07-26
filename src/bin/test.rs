@@ -16,7 +16,7 @@ fn main() {
     if let Err(e) = parser.parse() {
         println!("{}", e);
     } else {
-        let v = clip_value2!(parser, "--name", Text);
+        let v = clip_value!(parser, "--name", Text);
         println!("v={:?}", v);
     }
 }

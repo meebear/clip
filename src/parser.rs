@@ -347,11 +347,11 @@ impl ArgOpt {
 }
 
 #[macro_export]
-macro_rules! clip_value2 {
+macro_rules! clip_value {
     ($parser:ident, $key:expr, Text) => {
         match $parser.get_argopt($key) {
             Some(argopt) => {
-                Some(clip_value!(argopt.var, Text))
+                Some(clip_value_at!(argopt.var, Text))
             },
             None => None,
         }

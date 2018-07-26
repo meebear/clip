@@ -129,24 +129,17 @@ impl ArgType {
 }
 
 #[macro_export]
-macro_rules! clip_value_ {
-    ($at:ident, $dft:expr, $val:expr) => { {
-        let mut v = ArgType::$at($dft);
-        $val.get_value(&mut v);
-        if let ArgType::$at(c) = v {
-            Some(c)
-        } else {
-            None
-        }
-    } }
-}
-
-#[macro_export]
-macro_rules! clip_value {
+macro_rules! clip_value_at {
     ($val:expr, Custom) => {
         $val.get_custom_value().unwrap()
     };
-    ($val:expr, $at:ident) => {
-        clip_value_!($at, None, $val).unwrap()
-    };
+    ($val:expr, $at:ident) => { {
+        let mut v = ArgType::$at(None);
+        $val.get_value(&mut v);
+        if let ArgType::$at(c) = v {
+            c
+        } else {
+            panic!("should never get here");
+        }
+    } };
 }
