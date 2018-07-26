@@ -55,7 +55,7 @@ impl Display for ArgNum {
 
 #[derive(Debug)]
 pub struct ArgOpt {
-    var: ArgType,
+    pub var: ArgType,
     required: bool,
     argnum: ArgNum,
 }
@@ -326,10 +326,34 @@ impl Parser {
         }
         Ok(())
     }
+
+    pub fn get_argopt(&self, key: &str) -> Option<&ArgOpt> {
+        if let Some(ix) = self.index.get(key) {
+            if ix.is_opt {
+                Some(&self.opts[ix.idx])
+            } else {
+                Some(&self.args[ix.idx])
+            }
+        } else {
+            None
+        }
+    }
 }
 
 impl ArgOpt {
     fn set_value(&mut self, val: &str) -> Result<(), String> {
         self.var.set_value(&val.split(',').collect::<Vec<&str>>())
     }
+}
+
+#[macro_export]
+macro_rules! clip_value2 {
+    ($parser:ident, $key:expr, Text) => {
+        match $parser.get_argopt($key) {
+            Some(argopt) => {
+                Some(clip_value!(argopt.var, Text))
+            },
+            None => None,
+        }
+    };
 }

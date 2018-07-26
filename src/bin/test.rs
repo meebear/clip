@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate clip;
 use clip::{ArgType, Parser};
 
@@ -14,5 +15,8 @@ fn main() {
 
     if let Err(e) = parser.parse() {
         println!("{}", e);
+    } else {
+        let v = clip_value2!(parser, "--name", Text);
+        println!("v={:?}", v);
     }
 }
