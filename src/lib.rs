@@ -43,3 +43,4 @@ pub struct Parser {
 
 pub mod argtype;
 pub mod parser;
+pub mod help;
