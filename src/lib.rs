@@ -1,5 +1,8 @@
+//! clip lib documentation
+
 use std::fmt::Debug;
 use std::collections::HashMap;
+
 
 pub trait TrCustom: argtype::AsAny + Debug {
     fn parse_args(&mut self, vals: &[&str]) -> Result<(), String>;

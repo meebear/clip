@@ -1,3 +1,5 @@
+//! parser module documentation
+
 use std::env;
 use std::io;
 use std::collections::hash_map::Entry;
@@ -369,6 +371,7 @@ impl ArgOpt {
     }
 }
 
+/// Retrieve value by key (path)
 #[macro_export]
 macro_rules! clip_value {
     ($parser:ident, $key:expr, $at:ident) => {
